@@ -1,6 +1,5 @@
 package com.addressbooksystem;
 
-import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
@@ -9,12 +8,14 @@ import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
+import com.google.gson.Gson;
 
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.Array;
 import java.util.*;
 
 public class AddressBookMain {
@@ -24,8 +25,9 @@ public class AddressBookMain {
 
     static Scanner sc= new Scanner(System.in);
     private static HashMap<String, AddressBookMain> addressbook_map = new HashMap<String, AddressBookMain>();
-    private static final String filepath="C:\\Users\\Raj\\Desktop\\Java\\CSV\\data.txt";
-    private static final String filepath_csv="C:\\Users\\Raj\\Desktop\\Java\\CSV\\book.csv";
+    private static final String filepath = "C:\\Users\\Raj\\Desktop\\Java\\CSV\\data.txt";
+    private static final String filepath_csv = "C:\\Users\\Raj\\Desktop\\Java\\CSV\\book.csv";
+    private static final String filepath_json = "C:\\Users\\Raj\\Desktop\\Java\\CSV\\addressbook.json";
 
     public AddressBookMain(String bookName) {
         super();
@@ -333,7 +335,25 @@ public class AddressBookMain {
         }
     }
 
-    
+    /* UC15 -- read and write to json file */
+    public static void writeDataToJson(String bookName) throws IOException {
+        List<Contact> book = findBook(bookName);
+        Gson gson = new Gson();
+        String json = gson.toJson(book);
+        BufferedWriter writer = Files.newBufferedWriter(Paths.get(filepath_json));
+        writer.write(json);
+        writer.close();
+    }
+
+    public static void readDataFromJson() throws FileNotFoundException {
+        BufferedReader br = new BufferedReader(new FileReader(filepath_json));
+        Gson gson = new Gson();
+        Contact[] con = gson.fromJson(br, Contact[].class);
+        List<Contact> list_con = Arrays.asList(con);
+
+        for(Contact c: list_con)
+            System.out.println(c.toString());
+    }
 
     /* UC5 - UC6  -- Add multiple contacts and multiple address book */
     public static void initialize() throws CsvException, IOException {
@@ -351,7 +371,7 @@ public class AddressBookMain {
                 int choice = 1;
 
                 /* UC5 -- Add multiple contacts to one book */
-                while(choice != 15) {
+                while(choice != 17) {
                     System.out.println("1. Add a Contact");
                     System.out.println("2. Edit Details");
                     System.out.println("3. Delete a Contact");
@@ -366,7 +386,9 @@ public class AddressBookMain {
                     System.out.println("12. Read Data from File");
                     System.out.println("13. Read Data from CSV File");
                     System.out.println("14. Write Data to CSV File");
-                    System.out.println("15. Exit");
+                    System.out.println("15. Read Data from Json File");
+                    System.out.println("16. Write Data to Json File");
+                    System.out.println("17. Exit");
 
                     choice = sc.nextInt(); sc.nextLine();
 
@@ -423,13 +445,20 @@ public class AddressBookMain {
                             readDataFromFile(); break;
                         }
                         case 13: {
-                            readDataFromCSV();
-                            break;
+                            readDataFromCSV(); break;
                         }
                         case 14: {
                             System.out.println("Enter the book that you want to write");
                             String bookName = sc.nextLine();
                             writeDataToCsv(bookName);
+                        }
+                        case 15: {
+                            readDataFromJson(); break;
+                        }
+                        case 16: {
+                            System.out.println("Enter the book that you want to write");
+                            String bookName = sc.nextLine();
+                            writeDataToJson(bookName);
                         }
                     }
                 }
